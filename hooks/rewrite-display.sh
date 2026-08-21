@@ -43,6 +43,10 @@
 #                                                excluded (default 200)
 #   SPEAK_ENGLISH_MAX_CHARS  <n>             skip longer messages (default 16000)
 #   SPEAK_ENGLISH_TIMEOUT    <seconds>       rewriter timeout (default 45)
+#   SPEAK_ENGLISH_ARCHIVE_DIR <path>         keep every before/after pair here
+#                                            when the directory exists (default
+#                                            ~/.claude/speak-english-archive,
+#                                            never created by this hook)
 #   SPEAK_ENGLISH_DEBUG      1|0             log to the buffer dir (default 0)
 # ---------------------------------------------------------------------------
 set -uo pipefail
@@ -94,6 +98,12 @@ Do not explain, justify, or expand. Where the message states something without
 a reason, the rewrite states it without a reason too. A clause that is true and
 helpful but absent from the message is still an addition, and you may not make
 it.
+
+Keep who is responsible. Where the message says a mistake was the writer's own,
+the rewrite says so too, in the same person. "The failure was mine" may not
+become "the failure was in the test". Never trade an admission for a neutral
+description and never move fault from a person to a thing. The same holds for
+credit and for who performed an action.
 
 The rewrite is never longer than the original. It is usually shorter.
 
@@ -422,6 +432,32 @@ while IFS= read -r span; do
     *) dbg "reject: rewrite invented the inline span $span"; restore_original ;;
   esac
 done < "$mdir/inline.added"
+
+# Keep the pair when the archive directory exists. Creating it is the only
+# switch: whole assistant messages land there, so it is opt-in per machine and
+# never created by this hook. Any failure here is silent, because an archive
+# problem must not change what reaches the screen.
+archive_pair() {
+  _dir="${SPEAK_ENGLISH_ARCHIVE_DIR:-$CFG_DIR/speak-english-archive}"
+  [ -d "$_dir" ] || return 0
+  cat "$mdir"/*.part 2>/dev/null > "$mdir/original.txt" || return 0
+  _stamp="$(date -u '+%Y%m%dT%H%M%SZ' 2>/dev/null)" || return 0
+  jq -n --rawfile before "$mdir/original.txt" --rawfile after "$res" \
+    --arg at "$_stamp" --arg message_id "$mid" --arg model "$MODEL" --arg mode "$MODE" \
+    '{at:$at,message_id:$message_id,model:$model,mode:$mode,before:$before,after:$after}' \
+    2>/dev/null > "$mdir/archive.json" || return 0
+  # Move into place only once jq has written it, so a failed encode cannot leave
+  # a zero-byte file for a later reader to trip over.
+  mv "$mdir/archive.json" "$_dir/$_stamp-$mid.json" 2>/dev/null || return 0
+  # Bound it, newest 500. The name starts with a UTC timestamp, so a lexical
+  # sort is a chronological one and this needs neither ls nor a stat dialect.
+  find "$_dir" -maxdepth 1 -type f -name '*.json' 2>/dev/null \
+    | LC_ALL=C sort -r | tail -n +501 | while IFS= read -r _old; do
+        rm -f "$_old" 2>/dev/null || true
+      done
+  return 0
+}
+archive_pair
 
 out="$BUF_ROOT/$sid.$mid.out"
 if [ "$MODE" = "replace" ]; then
