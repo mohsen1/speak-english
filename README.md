@@ -142,8 +142,13 @@ resolve conflicts repeatedly, once per replayed commit" to "once per replayed
 commit", losing the word that carried the point. Tables are not fenced code, so
 no guard looks at them.
 
-So a rewrite that passes all four guards but adds a claim, or softens a caveat,
-is what you read. `/speak-english append` keeps both on screen.
+It also launders responsibility. Reporting a broken test of my own, the sentence
+"The failure was mine, not the production change" came back as "The failure was
+in the test, not the production change". Same facts, and the admission is gone.
+
+So a rewrite that passes all four guards but adds a claim, drops a qualifier, or
+softens an admission is what you read. `/speak-english append` keeps both on
+screen.
 
 ## Cost
 
