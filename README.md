@@ -62,17 +62,6 @@ instruction provoked.
 The rewriter is the only arm that cut length against its own input. An editor
 with no task can only delete.
 
-Full table, per-prompt character counts, and one answer shown through every arm:
-[`evals/RESULTS.md`](evals/RESULTS.md).
-
-Reproduce it:
-
-```bash
-python3 evals/run.py
-python3 evals/score.py evals/results.json                        # terminal
-python3 evals/score.py evals/results.json --markdown > evals/RESULTS.md
-```
-
 Sample size is 8 one-shot answers to generic questions, so read it as
 directional. The baseline scored zero praise openers and zero inflated
 vocabulary, which means the run barely exercises the tells that show up after
