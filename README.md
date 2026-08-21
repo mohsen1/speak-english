@@ -3,20 +3,40 @@
 A Claude Code plugin that rewrites each finished assistant message into plain
 English before it reaches your screen.
 
-Before:
+A real answer, to "Is it worth adding a feature flag for a small backend
+behaviour change?". Before:
 
-> You're absolutely right to flag this, and it's a great question. Let me delve
-> into the underlying architecture here.
+> Not usually — for a small backend behavior change, a feature flag adds ongoing
+> complexity (extra code paths, cleanup work later) that's rarely worth it unless
+> one of these applies:
 >
-> Essentially, the image upload job retry policy currently leverages a
-> robust, comprehensive, and seamless exponential backoff strategy that plays a
-> crucial role in ensuring that transient failures are handled gracefully. It's
-> worth noting that the retries are capped at 5 attempts.
+> - The change is risky enough that you'd want a fast kill-switch without a redeploy
+> - You need gradual rollout (canary %, specific users/orgs) rather than all-or-nothing
+> - It's tied to a coordinated launch (frontend/backend rollout, marketing timing)
+>
+> If none of those hold, just ship it behind normal code review + tests, and roll
+> back via git/deploy if it breaks. A flag you add "just in case" tends to become
+> permanent dead code nobody removes.
+>
+> If you tell me what the behavior change actually is, I can give a more concrete
+> yes/no.
 
 After:
 
-> The retry policy for image uploads uses exponential backoff to handle
-> transient failures, capped at 5 attempts.
+> Usually not. For a small backend behavior change, a feature flag adds ongoing
+> complexity (extra code paths, cleanup work later) that's rarely worth it unless
+> one of these applies:
+>
+> - The change is risky enough to need a kill switch without a redeploy.
+> - You need gradual rollout (canary percentage, specific users or orgs) instead
+>   of all-or-nothing.
+> - It's tied to a coordinated launch (frontend/backend rollout, marketing timing).
+>
+> If none apply, ship it behind normal code review and tests, and roll back via
+> git/deploy if it breaks. A flag added "just in case" tends to become permanent
+> dead code nobody removes.
+>
+> Tell me what the behavior change is and I can give a concrete yes/no.
 
 The rewriter is Claude Code itself, run headless (`claude -p`) against the login
 you already have. No API key, no local model server, no third-party provider.
@@ -114,9 +134,13 @@ editor with no task can only delete. Read it as directional, not proof.
 
 ## What nothing checks
 
-The prose. The contract forbids adding information and says so twice, and the
-rewriter still sometimes supplies a reason the message did not give. On the
-self-test message that happened in 1 of 3 runs.
+The prose. The contract forbids adding or removing information and says so
+twice, and the rewriter does both anyway. On the self-test message it supplied a
+reason the message did not give, in 1 of 3 runs. On an answer comparing `git
+merge` and `git rebase` it shortened a markdown table cell from "May need to
+resolve conflicts repeatedly, once per replayed commit" to "once per replayed
+commit", losing the word that carried the point. Tables are not fenced code, so
+no guard looks at them.
 
 So a rewrite that passes all four guards but adds a claim, or softens a caveat,
 is what you read. `/speak-english append` keeps both on screen.
