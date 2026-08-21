@@ -5,6 +5,7 @@ excluded, because the guide requires it to survive unchanged and counting it
 would reward a rewriter for deleting it.
 
     python3 evals/score.py evals/results.json
+    python3 evals/score.py evals/results.json --markdown > evals/RESULTS.md
 """
 import re, sys, json
 
@@ -26,22 +27,101 @@ def score(text):
     prose = re.sub(r"```.*?```", "", text, flags=re.S)
     return {k: len(re.findall(p, prose)) for k, p in TELLS.items()}
 
-if __name__ == "__main__":
-    data = json.load(open(sys.argv[1]))
-    arms = data["arms"]
-    names = list(arms)
-    totals = {n: {k: 0 for k in TELLS} for n in names}
-    chars = {n: 0 for n in names}
-    for n in names:
-        for out in arms[n]:
+
+
+def tally(arms):
+    """Per-arm tell counts and total characters."""
+    totals = {n: {k: 0 for k in TELLS} for n in arms}
+    chars = {n: 0 for n in arms}
+    for n, outs in arms.items():
+        for out in outs:
             for k, v in score(out).items():
                 totals[n][k] += v
             chars[n] += len(out)
-    keys = list(TELLS)
-    w = max(len(k) for k in keys) + 2
+    return totals, chars
+
+
+def plain(names, totals, chars):
+    w = max(len(k) for k in TELLS) + 2
     c = max(len(n) for n in names) + 3
-    print(f"{'tell':{w}}" + "".join(f"{n:>{c}}" for n in names))
-    for k in keys:
-        print(f"{k:{w}}" + "".join(f"{totals[n][k]:>{c}}" for n in names))
-    print(f"{'TOTAL tells':{w}}" + "".join(f"{sum(totals[n].values()):>{c}}" for n in names))
-    print(f"{'total chars':{w}}" + "".join(f"{chars[n]:>{c}}" for n in names))
+    rows = [f"{'tell':{w}}" + "".join(f"{n:>{c}}" for n in names)]
+    for k in TELLS:
+        rows.append(f"{k:{w}}" + "".join(f"{totals[n][k]:>{c}}" for n in names))
+    rows.append(f"{'TOTAL tells':{w}}" + "".join(f"{sum(totals[n].values()):>{c}}" for n in names))
+    rows.append(f"{'total chars':{w}}" + "".join(f"{chars[n]:>{c}}" for n in names))
+    return "\n".join(rows)
+
+
+def markdown(data, names, totals, chars):
+    arms = data["arms"]
+    n_prompts = len(data["prompts"])
+    out = []
+    out.append("# Eval results")
+    out.append("")
+    out.append(f"{n_prompts} prompts, model `{data.get('model', 'sonnet')}`, "
+               f"one-shot `claude -p`. Regenerate with:")
+    out.append("")
+    out.append("```bash")
+    out.append("python3 evals/run.py")
+    out.append("python3 evals/score.py evals/results.json --markdown > evals/RESULTS.md")
+    out.append("```")
+    out.append("")
+    out.append("Tells are counted by regex over the prose. Fenced code is excluded, because")
+    out.append("the guide requires it to survive unchanged and counting it would reward a")
+    out.append("rewriter for deleting it. Lower is better in every column.")
+    out.append("")
+
+    head = "| tell | " + " | ".join(f"`{n}`" for n in names) + " |"
+    sep = "| --- | " + " | ".join("---:" for _ in names) + " |"
+    out += [head, sep]
+    for k in TELLS:
+        row = [str(totals[n][k]) for n in names]
+        if all(v == "0" for v in row):
+            continue  # a tell nothing produced says nothing
+        out.append(f"| {k} | " + " | ".join(row) + " |")
+    out.append("| **total tells** | " + " | ".join(f"**{sum(totals[n].values())}**" for n in names) + " |")
+    out.append("| total characters | " + " | ".join(f"{chars[n]:,}" for n in names) + " |")
+    out.append("")
+    zero = [k for k in TELLS if all(totals[n][k] == 0 for n in names)]
+    if zero:
+        out.append("Never produced by any arm, so the run does not test them: "
+                   + ", ".join(f"`{k}`" for k in zero) + ". These are the tells that show")
+        out.append("up after twenty turns of real work, not in a one-shot answer, so the totals")
+        out.append("above understate what the rewriter has to remove in a session.")
+        out.append("")
+
+    out.append("## Per prompt")
+    out.append("")
+    out.append("Characters, so the length effect is visible per question rather than only in")
+    out.append("the total.")
+    out.append("")
+    out.append("| prompt | " + " | ".join(f"`{n}`" for n in names) + " |")
+    out.append("| --- | " + " | ".join("---:" for _ in names) + " |")
+    for i, p in enumerate(data["prompts"]):
+        label = p if len(p) <= 58 else p[:57] + "…"
+        out.append(f"| {label} | " + " | ".join(f"{len(arms[n][i]):,}" for n in names) + " |")
+    out.append("")
+
+    out.append("## One answer, every arm")
+    out.append("")
+    pick = min(range(len(data["prompts"])), key=lambda i: len(arms[names[0]][i]))
+    out.append(f"Prompt: **{data['prompts'][pick]}**")
+    out.append("")
+    for n in names:
+        text = arms[n][pick]
+        out.append(f"### `{n}` ({len(text):,} characters)")
+        out.append("")
+        out.append("> " + text.replace("\n", "\n> "))
+        out.append("")
+    return "\n".join(out)
+
+
+if __name__ == "__main__":
+    path = sys.argv[1]
+    data = json.load(open(path))
+    names = list(data["arms"])
+    totals, chars = tally(data["arms"])
+    if "--markdown" in sys.argv:
+        print(markdown(data, names, totals, chars))
+    else:
+        print(plain(names, totals, chars))
