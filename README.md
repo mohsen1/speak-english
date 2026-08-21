@@ -142,13 +142,35 @@ resolve conflicts repeatedly, once per replayed commit" to "once per replayed
 commit", losing the word that carried the point. Tables are not fenced code, so
 no guard looks at them.
 
-It also launders responsibility. Reporting a broken test of my own, the sentence
-"The failure was mine, not the production change" came back as "The failure was
-in the test, not the production change". Same facts, and the admission is gone.
+It launders responsibility, or did. "The failure was mine, not the production
+change" came back as "The failure was in the test, not the production change":
+same facts, no admission. The contract now forbids trading an admission for a
+neutral description or moving fault from a person to a thing, which took that
+sentence from surviving 1 of 6 runs to 6 of 6. It is a prompt, not a guard, so
+treat it as a strong tendency rather than a guarantee.
 
 So a rewrite that passes all four guards but adds a claim, drops a qualifier, or
 softens an admission is what you read. `/speak-english append` keeps both on
 screen.
+
+## Keeping the pairs
+
+Rewriting is destructive by default: the buffer is deleted once the message is on
+screen, so the only record of what changed is the transcript plus a replay. To
+keep every before and after instead, create the directory:
+
+```bash
+mkdir -p ~/.claude/speak-english-archive
+```
+
+Its existence is the only switch. The hook never creates it, so nothing is
+recorded until you ask, and removing it stops the recording. Each rewritten
+message writes one JSON file holding `before`, `after`, `model`, `mode`, the
+message id, and a UTC timestamp. The newest 500 are kept.
+
+The files hold whole assistant messages in plaintext. They inherit the script's
+`umask 077`, so they are owner-only. Every step is silent: an archive failure
+cannot change what reaches the screen.
 
 ## Cost
 
@@ -193,6 +215,7 @@ and the guards still stop it changing code or inventing a command.
 | `SPEAK_ENGLISH_MIN_CHARS`  | `200`                          | Skip shorter messages, prose only    |
 | `SPEAK_ENGLISH_MAX_CHARS`  | `16000`                        | Skip longer messages                 |
 | `SPEAK_ENGLISH_TIMEOUT`    | `45`                           | Rewriter timeout, seconds            |
+| `SPEAK_ENGLISH_ARCHIVE_DIR` | `~/.claude/speak-english-archive` | Keep every pair here when it exists. |
 | `SPEAK_ENGLISH_DEBUG`      | `0`                            | Log to the buffer directory          |
 
 Environment variables freeze when the session launches, so they are for scripts.
