@@ -18,7 +18,7 @@ trap 'rm -rf "$WORK"' EXIT
 cat > "$WORK/head.txt" <<'EOF'
 You're absolutely right to flag this — and it's a great question. Let me delve into the underlying architecture here.
 
-Essentially, the feed background image job retry policy currently leverages a robust, comprehensive, and seamless exponential backoff strategy that plays a crucial role in ensuring that transient failures are handled gracefully. It's worth noting that the retries are capped at 5 attempts, which is fundamentally a pragmatic tradeoff.
+Essentially, the image upload job retry policy currently leverages a robust, comprehensive, and seamless exponential backoff strategy that plays a crucial role in ensuring that transient failures are handled gracefully. It's worth noting that the retries are capped at 5 attempts, which is fundamentally a pragmatic tradeoff.
 EOF
 
 cat > "$WORK/tail.txt" <<'EOF'

@@ -26,8 +26,8 @@ These follow ASD-STE100 Simplified Technical English.
 4. Use the present tense where the content allows it.
 5. Use the same word for the same thing every time. Do not vary a term for
    elegance.
-6. Use no noun cluster longer than three words. "Feed background image job
-   retry policy" becomes "the retry policy for feed background image jobs".
+6. Use no noun cluster longer than three words. "Image upload job retry policy"
+   becomes "the retry policy for image upload jobs".
 7. Keep the articles. Do not write telegram style.
 8. Prefer a finite verb to an -ing form. Replace a participial lead-in
    ("Having checked X, the code...") with two sentences.

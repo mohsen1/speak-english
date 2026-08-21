@@ -8,15 +8,15 @@ Before:
 > You're absolutely right to flag this, and it's a great question. Let me delve
 > into the underlying architecture here.
 >
-> Essentially, the feed background image job retry policy currently leverages a
+> Essentially, the image upload job retry policy currently leverages a
 > robust, comprehensive, and seamless exponential backoff strategy that plays a
 > crucial role in ensuring that transient failures are handled gracefully. It's
 > worth noting that the retries are capped at 5 attempts.
 
 After:
 
-> The retry policy for feed background image jobs uses exponential backoff to
-> handle transient failures. Retries are capped at 5 attempts.
+> The retry policy for image uploads uses exponential backoff to handle
+> transient failures, capped at 5 attempts.
 
 The rewriter is Claude Code itself, run headless (`claude -p`) against the login
 you already have. No API key, no local model server, no third-party provider.
