@@ -1,0 +1,17 @@
+{
+  "name": "speak-english",
+  "description": "Rewrites each finished assistant message into plain English before it reaches your screen. Off until you run /speak-english on.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Mohsen Azimi",
+    "url": "https://github.com/mohsen1"
+  },
+  "homepage": "https://github.com/mohsen1/speak-english",
+  "license": "MIT",
+  "keywords": [
+    "style",
+    "readability",
+    "message-display",
+    "hook"
+  ]
+}

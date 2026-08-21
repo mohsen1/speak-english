@@ -1,0 +1,8 @@
+Why does my React component re-render every time the parent updates?
+Explain database connection pooling.
+How do I fix a memory leak in a long-running Node.js process?
+Why am I getting CORS errors in my browser console?
+How does git rebase differ from git merge?
+When should I use a queue vs a topic in messaging systems?
+Our Postgres migration hangs in production. Where do I start looking?
+Is it worth adding a feature flag for a small backend behaviour change?

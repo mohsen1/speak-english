@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "speak-english",
+  "description": "Rewrites each finished assistant message into plain English before it reaches your screen.",
+  "owner": {
+    "name": "Mohsen Azimi",
+    "url": "https://github.com/mohsen1"
+  },
+  "plugins": [
+    {
+      "name": "speak-english",
+      "description": "Rewrites each finished assistant message into plain English before it reaches your screen. Off until you run /speak-english on.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}
